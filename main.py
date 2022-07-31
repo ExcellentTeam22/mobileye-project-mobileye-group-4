@@ -54,7 +54,16 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
         what = ['traffic light']
         objects = [o for o in gt_data['objects'] if o['label'] in what]
 
-    show_image_and_gt(image, objects, fig_num)
+    # show_image_and_gt(image, objects, fig_num)
+
+    plt.figure(56)
+    plt.clf()
+    h = plt.subplot(111)
+    plt.imshow(image)
+    plt.figure(57)
+    plt.clf()
+    plt.subplot(111, sharex=h, sharey=h)
+    plt.imshow(image)
 
     red_x, red_y, green_x, green_y = find_tfl_lights(image)
     plt.plot(red_x, red_y, 'ro', color='r', markersize=4)
@@ -74,7 +83,7 @@ def main(argv=None):
     parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     args = parser.parse_args(argv)
     # To do: change the directory according to your computer!!!
-    default_base = "C:\\Users\\Mohamad-PC\\Desktop\\mobileye\\mobileye-project-mobileye-group-4\\images\\gtFine\\test\\mainz"
+    default_base = "C:\\Users\\Mohamad-PC\\Desktop\\mobileye\\mobileye-project-mobileye-group-4\\Test_for_me"
 
     if args.dir is None:
         args.dir = default_base
