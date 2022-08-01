@@ -6,7 +6,7 @@ try:
     import cv2
     import numpy as np
     from scipy import signal as sg
-    from scipy.ndimage import maximum_filter
+    from scipy.ndimage import maximum_filter, black_tophat
     from scipy.signal import convolve2d
     from scipy import misc
     from PIL import Image
@@ -18,10 +18,11 @@ except ImportError:
 
 
 def rgb_convolve2d(image, kernel):
-    red = convolve2d(image[:,:,0], kernel, 'valid', boundary='wrap')
-    green = convolve2d(image[:,:,1], kernel, 'valid')
-    blue = convolve2d(image[:,:,2], kernel, 'valid')
+    red = convolve2d(image[:, :, 0], kernel, 'valid', boundary='wrap')
+    green = convolve2d(image[:, :, 1], kernel, 'valid')
+    blue = convolve2d(image[:, :, 2], kernel, 'valid')
     return np.stack([red, green, blue], axis=2)
+
 
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
@@ -31,40 +32,32 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
     # Some kernels for test
-    kernel4 = np.array([[1, 0, -1],
-                        [0, 0, 0],
-                        [-1, 0, 1]])
-    kernel1 = np.array([[0, -1, 0],
-                        [-1, 5, -1],
-                        [0, -1, 0]])
-    kernel2 = np.array([[-1, -1, -1],
-                        [-1, 8, -1],
-                        [-1, -1, -1]])
-    kernel5 = np.array([[1, 0, -1],
-                        [2, 0, -2],
-                        [1, 0, -1]])
-    kernel5 = np.array([[-1, 2, -1],
-                        [-2, 4, -2],
-                        [-1, 2, -1]])
-    kernel6 = np.array([[-1, -1, -1, -1, -1],
-                        [-1, 2, 2, 2, -1],
-                        [-1, 2, 10, 2, -1],
-                        [-1, 2, 2, 2, -1],
-                        [-1, -1, -1, -1, -1]])
+    kernel = np.array([[1, 1, 1, 1, 1, 1, 1],
+                       [1, 1, 1, -2, 1, 1, 1],
+                       [1, 1, -3, -3, -3, 1, 1],
+                       [1, -2, -3, -8, -3, -2, 1],
+                       [1, 1, -3, -3, -3, 1, 1],
+                       [1, 1, 1, -2, 1, 1, 1],
+                       [1, 1, 1, 1, 1, 1, 1]])
+    # kernel = np.array([[1, 1, 2, 1, 1],
+    #                    [1, -2, -2, -2, 1],
+    #                    [2, -2, -4, -2, 2],
+    #                    [1, -2, -2, -2, 1],
+    #                    [1, 1, 2, 1, 1]])
     # Do not delete its important!
-    conv_im1 = rgb_convolve2d(c_image, kernel6)
-    #fig, ax = plt.subplots(1, 2)
-    #plt.imshow(kernel5, cmap='gray')
+    # conv_im1 = rgb_convolve2d(c_image, kernel6)
+    # fig, ax = plt.subplots(1, 2)
+    # plt.imshow(kernel5, cmap='gray')
 
     # Convert Image to Red.
     for i in range(len(c_image)):
         for j in range(len(c_image[i])):
             c_image[i][j][0] = 255
-    gray = cv2.cvtColor(c_image, cv2.COLOR_RGB2GRAY)
-    conv_im1 = convolve2d(gray, kernel6)
-
-    conv_im1 = maximum_filter(conv_im1, size=3)
-    plt.imshow(conv_im1, cmap="gray")
+    gray = cv2.cvtColor(c_image.resize((c_image.size[0] * 0.4, c_image.size[1] * 0.4)), cv2.COLOR_RGB2GRAY)
+    conv_im1 = convolve2d(gray, kernel)
+    conv_im1 = black_tophat(conv_im1, size=6)
+    conv_im1 = maximum_filter(conv_im1, size=6)
+    plt.imshow(abs(conv_im1), cmap="gray")
     # plt.imshow(c_image)
 
     return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
@@ -112,7 +105,6 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
-
 def main(argv=None):
     """It's nice to have a standalone tester for the algorithm.
     Consider looping over some images from here, so you can manually exmine the results
@@ -139,7 +131,6 @@ def main(argv=None):
         if not os.path.exists(json_fn):
             json_fn = None
         test_find_tfl_lights(image, json_fn)
-
 
     if len(flist):
         print("You should now see some images, with the ground truth marked on them. Close all to quit.")
