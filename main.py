@@ -119,7 +119,7 @@ def main(argv=None):
     parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     args = parser.parse_args(argv)
     # To do: change the directory according to your computer!!!
-    default_base = "C:\\Users\\Mohamad-PC\\Desktop\\mobileye\\mobileye-project-mobileye-group-4\\Test_for_me"
+    default_base = r"tests"
 
     if args.dir is None:
         args.dir = default_base
