@@ -3,7 +3,7 @@ try:
     import json
     import glob
     import argparse
-
+    import cv2
     import numpy as np
     from scipy import signal as sg
     from scipy.ndimage import maximum_filter
@@ -18,7 +18,7 @@ except ImportError:
 
 
 def rgb_convolve2d(image, kernel):
-    red = convolve2d(image[:,:,0], kernel, 'valid')
+    red = convolve2d(image[:,:,0], kernel, 'valid', boundary='wrap')
     green = convolve2d(image[:,:,1], kernel, 'valid')
     blue = convolve2d(image[:,:,2], kernel, 'valid')
     return np.stack([red, green, blue], axis=2)
@@ -46,20 +46,26 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     kernel5 = np.array([[-1, 2, -1],
                         [-2, 4, -2],
                         [-1, 2, -1]])
-    kernel6 = np.array([[0, 1, 1, 1, 0],
-                        [0, 1, 1, 1, 0],
-                        [0, -4, -4, -4, 0],
-                        [0, 1, 1, 1, 0],
-                        [0, 1, 1, 1, 0]])
+    kernel6 = np.array([[-1, -1, -1, -1, -1],
+                        [-1, 2, 2, 2, -1],
+                        [-1, 2, 10, 2, -1],
+                        [-1, 2, 2, 2, -1],
+                        [-1, -1, -1, -1, -1]])
     # Do not delete its important!
-    # conv_im1 = rgb_convolve2d(c_image, kernel2)
-    # plt.imshow(abs(conv_im1))
+    conv_im1 = rgb_convolve2d(c_image, kernel6)
+    #fig, ax = plt.subplots(1, 2)
+    #plt.imshow(kernel5, cmap='gray')
 
     # Convert Image to Red.
     for i in range(len(c_image)):
         for j in range(len(c_image[i])):
             c_image[i][j][0] = 255
-    plt.imshow(c_image)
+    gray = cv2.cvtColor(c_image, cv2.COLOR_RGB2GRAY)
+    conv_im1 = convolve2d(gray, kernel6)
+
+    conv_im1 = maximum_filter(conv_im1, size=3)
+    plt.imshow(conv_im1, cmap="gray")
+    # plt.imshow(c_image)
 
     return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
 
