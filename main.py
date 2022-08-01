@@ -7,7 +7,8 @@ try:
     import numpy as np
     from scipy import signal as sg
     from scipy.ndimage import maximum_filter
-
+    from scipy.signal import convolve2d
+    from scipy import misc
     from PIL import Image
 
     import matplotlib.pyplot as plt
@@ -16,6 +17,12 @@ except ImportError:
     raise
 
 
+def rgb_convolve2d(image, kernel):
+    red = convolve2d(image[:,:,0], kernel, 'valid')
+    green = convolve2d(image[:,:,1], kernel, 'valid')
+    blue = convolve2d(image[:,:,2], kernel, 'valid')
+    return np.stack([red, green, blue], axis=2)
+
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
     Detect candidates for TFL lights. Use c_image, kwargs and you imagination to implement
@@ -23,8 +30,37 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :param kwargs: Whatever config you want to pass in here
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
-    ### WRITE YOUR CODE HERE ###
-    ### USE HELPER FUNCTIONS ###
+    # Some kernels for test
+    kernel4 = np.array([[1, 0, -1],
+                        [0, 0, 0],
+                        [-1, 0, 1]])
+    kernel1 = np.array([[0, -1, 0],
+                        [-1, 5, -1],
+                        [0, -1, 0]])
+    kernel2 = np.array([[-1, -1, -1],
+                        [-1, 8, -1],
+                        [-1, -1, -1]])
+    kernel5 = np.array([[1, 0, -1],
+                        [2, 0, -2],
+                        [1, 0, -1]])
+    kernel5 = np.array([[-1, 2, -1],
+                        [-2, 4, -2],
+                        [-1, 2, -1]])
+    kernel6 = np.array([[0, 1, 1, 1, 0],
+                        [0, 1, 1, 1, 0],
+                        [0, -4, -4, -4, 0],
+                        [0, 1, 1, 1, 0],
+                        [0, 1, 1, 1, 0]])
+    # Do not delete its important!
+    # conv_im1 = rgb_convolve2d(c_image, kernel2)
+    # plt.imshow(abs(conv_im1))
+
+    # Convert Image to Red.
+    for i in range(len(c_image)):
+        for j in range(len(c_image[i])):
+            c_image[i][j][0] = 255
+    plt.imshow(c_image)
+
     return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
 
 
@@ -97,6 +133,7 @@ def main(argv=None):
         if not os.path.exists(json_fn):
             json_fn = None
         test_find_tfl_lights(image, json_fn)
+
 
     if len(flist):
         print("You should now see some images, with the ground truth marked on them. Close all to quit.")
