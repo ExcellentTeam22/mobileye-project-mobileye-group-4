@@ -53,7 +53,9 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     for i in range(len(c_image)):
         for j in range(len(c_image[i])):
             c_image[i][j][0] = 255
-    gray = cv2.cvtColor(c_image.resize((c_image.size[0] * 0.4, c_image.size[1] * 0.4)), cv2.COLOR_RGB2GRAY)
+    img = Image.fromarray(c_image)
+    img.resize(size=(int(img.size[0] * 0.4), int(img.size[1] * 0.4)))
+    gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
     conv_im1 = convolve2d(gray, kernel)
     conv_im1 = black_tophat(conv_im1, size=6)
     conv_im1 = maximum_filter(conv_im1, size=6)
