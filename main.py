@@ -21,7 +21,7 @@ except ImportError:
     raise
 
 
-def rgb_convolve2d(image, kernel):
+def rgb_convolve(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
     # blue = convolve2d(image[:, :, 2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 'same')
@@ -36,61 +36,15 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :param kwargs: Whatever config you want to pass in here
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
-    # Some kernels for test
-    # kernel = np.array([[1, 1, 1, 1, 1, 1, 1],
-    #                    [1, 1, 1, -2, 1, 1, 1],
-    #                    [1, 1, -3, -3, -3, 1, 1],
-    #                    [1, -2, -3, -8, -3, -2, 1],
-    #                    [1, 1, -3, -3, -3, 1, 1],
-    #                    [1, 1, 1, -2, 1, 1, 1],
-    #                    [1, 1, 1, 1, 1, 1, 1]])
 
     kernel = (1 / 9) * np.array([[-1, -1, -1, -1, -1],
                                  [-1, -1, 4, -1, -1],
                                  [-1, 4, 4, 4, -1],
                                  [-1, -1, 4, -1, -1],
                                  [-1, -1, -1, -1, -1]])
-    # kernel = np.array([[1, 1, 1, 2, -2, 2, -2, 2, 1, 1],
-    #                    [1, 2, -3, -3, -3, -3, -3, 2, 1],
-    #                    [2, -2, -3, -3, -3, -3, -3, -2, 2],
-    #                    [-2, -2, -3, -3, -8, -3, -3, -2, -2],
-    #                    [2, -2, -3, -3, -3, -3, -3, -2, 2],
-    #                    [1, 2, -3, -3, -3, -3, -3, 2, 1],
-    #                    [1, 1, 2, -2, -2, -2, 2, 1, 1],
-    #                    [1, 1, 1, 2, -2, 2, 1, 1, 1]])
-    # kernel = np.array([[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, 2, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, 2, 2, 2, -1, -1, -1, -1],
-    #                    [-1, -1, -1, 3, 3, 3, 3, 3, -1, -1, -1],
-    #                    [-1, -1, 2, 3, 3, 3, 3, 3, 2, -1, -1],
-    #                    [-1, 2, 2, 3, 3, 8, 3, 3, 2, 2, -1],
-    #                    [-1, -1, 2, 3, 3, 3, 3, 3, 2, -1, -1],
-    #                    [-1, -1, -1, 3, 3, 3, 3, 3, -1, -1, -1],
-    #                    [-1, -1, -1, -1, 2, 2, 2, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, 2, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]])
-    # kernel = np.array([[-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, 0, 2, 2, 2, 0, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, 0, 2, 2, 2, 2, 2, 0, -1, -1, -1, -1],
-    #                    [-1, -1, -1, 0, 2, 2, 2, 2, 2, 2, 2, 0, -1, -1, -1],
-    #                    [-1, -1, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, -1, -1],
-    #                    [-1, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, -1],
-    #                    [-1, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, -1],
-    #                    [-1, -1, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, -1, -1],
-    #                    [-1, -1, -1, 0, 2, 2, 2, 2, 2, 2, 2, 0, -1, -1, -1],
-    #                    [-1, -1, -1, -1, 0, 2, 2, 2, 2, 2, 0, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, 0, 2, 2, 2, 0, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
-    #                    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]])
-    # kernel = np.array([[0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
-    #                     [0.000, 0.000, 0.034, 0.034, 0.034, 0.000, 0.000],
-    #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
-    #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
-    #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
-    #                     [0.000, 0.000, 0.034, 0.034, 0.034, 0.000, 0.000],
-    #                     [0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000]])
+
+
+
     # Getting the kernel to be used in Top-Hat
     # filterSize = (3, 3)
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,
@@ -114,6 +68,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # img.resize(size=(int(img.size[0] * 0.9), int(img.size[1] * 0.9)))
     # gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
     # c_image = plt.imread(c_image)
+
     conv_im1, conv_im2 = rgb_convolve2d(c_image, kernel)
 
     # conv_im2 = black_tophat(conv_im1, size=3)
@@ -124,62 +79,17 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # plt.imshow(kernel, cmap="gray" )
     # plt.show()
 
-    # plt.imshow(kernel, cmap="gray")
+    conv_im1, conv_im2 = rgb_convolve(c_image, kernel)
+    # plt.imshow(conv_im1)
+    # plt.title("red")
     # plt.show()
+    # conv_im2 = black_tophat(conv_im1, size=3)
+    red_image = filters.maximum_filter(conv_im1, size=30)
+    green_image = filters.maximum_filter(conv_im2, size=30)
 
-    # image = np.asarray(red_image)
-    #
+
     red_coordinates = np.argwhere(red_image > 0.3)
     green_coordinates = np.argwhere(green_image > 0.3)
-
-    # print(green_image)
-
-    # image = green_image.copy()
-    # image[image < 0.3] = 0
-    # plt.imshow(image)
-    # plt.title("red")
-    # plt.show()
-    # image = np.where(image > 0.08)
-    # print(image)
-    # list = np.where(image > 0.08)
-    # image = np.where(image > 0.08)
-    # for l in list:
-    #     print(l)
-    green_list = []
-    red_list = []
-    # image[image < 0.1] = 0
-    # for i in range(len(image)):
-    #     for j in range(len(image[i])):
-    #         if image[i][j] != 0:
-    #             if image[i][j] > 0.2:
-    #                 green_list.append((i, j))
-    #             else:
-    #                 red_list.append((i, j))
-    #
-    # # a = [0 if a_ < 0.19 else a_ for a_ in green_image]
-    # print("green coordinates:")
-    # print(green_list)
-    # print("red coordinates:")
-    #
-    # print(red_list)
-    # plt.imshow(image)
-    # plt.title("red")
-    # plt.show()
-
-    # plt.imshow(green_image)
-    # plt.title("green")
-    # plt.show()
-
-    # print(c_image)
-    # for i in range(len(c_image)):
-    #     for j in range(len(c_image[i])):
-    #         if red_image[i] > c_image.any():
-    #             green_list.append((i, j))
-    #         if red_image[i] > c_image[i][j][0]:
-    #             red_list.append((i, j))
-    # print(green_list)
-    # print(red_list)
-    # plt.imshow(c_image)
 
     return red_coordinates, green_coordinates
 
