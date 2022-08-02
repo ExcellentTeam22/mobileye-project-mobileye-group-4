@@ -42,8 +42,6 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                  [-1, -1, 4, -1, -1],
                                  [-1, -1, -1, -1, -1]])
 
-
-
     # Getting the kernel to be used in Top-Hat
     # filterSize = (3, 3)
     # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,
@@ -85,7 +83,6 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # conv_im2 = black_tophat(conv_im1, size=3)
     red_image = filters.maximum_filter(conv_im1, size=1)
     green_image = filters.maximum_filter(conv_im2, size=1)
-
 
     red_coordinates = np.argwhere(red_image > 0.35)
     green_coordinates = np.argwhere(green_image > 0.4)
@@ -133,6 +130,14 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
 
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
+    cropped_images = []
+    for current in red_list:
+        x = current[1]
+        y = current[0]
+        cropped_images.append(image[y - 30: y + 40, x - 20: x + 20])
+    # cropped_images = [image[red_corner[0] - 8: red_corner[1] + 8, red_corner[1] - 8 : red_corner[1] + 8] for red_corner in red_list]
+    plt.imshow(cropped_images[1])
+    plt.show()
     for i in red_list:
         plt.plot(i[1], i[0], 'ro', color='r', markersize=2)
     for i in green_list:
