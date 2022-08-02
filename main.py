@@ -1,7 +1,6 @@
-from skimage.feature import peak_local_max
 try:
     from numpy import dtype
-    # import skimage as sk
+    from skimage.feature import peak_local_max
     import os
     import json
     import glob
@@ -10,7 +9,7 @@ try:
     import numpy as np
     from scipy import signal as sg
     from scipy.ndimage import convolve
-    import scipy.ndimage.filters as filters
+    import scipy.ndimage as filters
 
     from scipy import misc
     from PIL import Image
@@ -69,13 +68,13 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
     # c_image = plt.imread(c_image)
 
-    conv_im1, conv_im2 = rgb_convolve2d(c_image, kernel)
+    conv_im1, conv_im2 = rgb_convolve(c_image, kernel)
 
     # conv_im2 = black_tophat(conv_im1, size=3)
     # red_image = filters.maximum_filter(conv_im1, size=3)
     # green_image = filters.maximum_filter(conv_im2, size=3)
-    red_image = peak_local_max(conv_im1, min_distance=100)
-    green_image = peak_local_max(conv_im2, min_distance=100)
+    # red_image = peak_local_max(conv_im1, min_distance=20)
+    # green_image = peak_local_max(conv_im2, min_distance=20)
     # plt.imshow(kernel, cmap="gray" )
     # plt.show()
 
@@ -84,12 +83,12 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # plt.title("red")
     # plt.show()
     # conv_im2 = black_tophat(conv_im1, size=3)
-    red_image = filters.maximum_filter(conv_im1, size=30)
-    green_image = filters.maximum_filter(conv_im2, size=30)
+    red_image = filters.maximum_filter(conv_im1, size=1)
+    green_image = filters.maximum_filter(conv_im2, size=1)
 
 
-    red_coordinates = np.argwhere(red_image > 0.3)
-    green_coordinates = np.argwhere(green_image > 0.3)
+    red_coordinates = np.argwhere(red_image > 0.35)
+    green_coordinates = np.argwhere(green_image > 0.4)
 
     return red_coordinates, green_coordinates
 
@@ -135,9 +134,9 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
     for i in red_list:
-        plt.plot(i[1], i[0], 'ro', color='r', markersize=1)
+        plt.plot(i[1], i[0], 'ro', color='r', markersize=2)
     for i in green_list:
-        plt.plot(i[1], i[0], 'ro', color='g', markersize=1)
+        plt.plot(i[1], i[0], 'ro', color='g', markersize=2)
     # plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
@@ -153,7 +152,7 @@ def main(argv=None):
     parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     args = parser.parse_args(argv)
     # To do: change the directory according to your computer!!!
-    default_base = "C:\\Users\\Mohamad-PC\\Desktop\\mobileye\\mobileye-project-mobileye-group-4\\Test_for_me"
+    default_base = r"tests"
 
     if args.dir is None:
         args.dir = default_base
