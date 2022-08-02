@@ -20,6 +20,19 @@ except ImportError:
     raise
 
 
+# def check_jsons(green_list, red_list, picture_json):
+#     return all(item in green_list or item in red_list for item in json.load(picture_json))
+#     # for i in picture_json:
+#     #     if i not in find_lists:
+#     #         return False
+#     # return True
+
+
+def get_crops_images(color_list, image):
+    return [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20]
+            for current_picture in color_list if current_picture[0] >= 40 and current_picture[1] >= 20]
+
+
 def rgb_convolve(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
@@ -41,8 +54,6 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                  [-1, 4, 4, 4, -1],
                                  [-1, -1, 4, -1, -1],
                                  [-1, -1, -1, -1, -1]])
-
-
 
     # Getting the kernel to be used in Top-Hat
     # filterSize = (3, 3)
@@ -85,7 +96,6 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # conv_im2 = black_tophat(conv_im1, size=3)
     red_image = filters.maximum_filter(conv_im1, size=1)
     green_image = filters.maximum_filter(conv_im2, size=1)
-
 
     red_coordinates = np.argwhere(red_image > 0.35)
     green_coordinates = np.argwhere(green_image > 0.4)
@@ -133,6 +143,8 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
 
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
+    red_crops = get_crops_images(red_list, image)
+    green_corps = get_crops_images(green_list, image)
     for i in red_list:
         plt.plot(i[1], i[0], 'ro', color='r', markersize=2)
     for i in green_list:
