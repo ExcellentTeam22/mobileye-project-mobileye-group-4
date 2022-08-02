@@ -20,6 +20,19 @@ except ImportError:
     raise
 
 
+# def check_jsons(green_list, red_list, picture_json):
+#     return all(item in green_list or item in red_list for item in json.load(picture_json))
+#     # for i in picture_json:
+#     #     if i not in find_lists:
+#     #         return False
+#     # return True
+
+
+def get_crops_images(color_list, image):
+    return [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20]
+            for current_picture in color_list if current_picture[0] >= 40 and current_picture[1] >= 20]
+
+
 def rgb_convolve(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
@@ -130,8 +143,8 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
 
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
-    cropped_images_red_list = [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20] for current_picture in red_list if current_picture[0] >= 40 and current_picture[1] >= 20]
-    cropped_images_green_list = [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20] for current_picture in green_list if current_picture[0] >= 40 and current_picture[1] >= 20]
+    red_crops = get_crops_images(red_list, image)
+    green_corps = get_crops_images(green_list, image)
     for i in red_list:
         plt.plot(i[1], i[0], 'ro', color='r', markersize=2)
     for i in green_list:
