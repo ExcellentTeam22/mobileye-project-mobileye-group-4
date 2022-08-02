@@ -1,4 +1,7 @@
+from skimage.feature import peak_local_max
 try:
+    from numpy import dtype
+    # import skimage as sk
     import os
     import json
     import glob
@@ -8,7 +11,7 @@ try:
     from scipy import signal as sg
     from scipy.ndimage import convolve
     import scipy.ndimage.filters as filters
-    from scipy.signal import convolve2d
+
     from scipy import misc
     from PIL import Image
 
@@ -21,9 +24,10 @@ except ImportError:
 def rgb_convolve2d(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
-    #blue = convolve2d(image[:, :, 2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 'same')
-    #return np.stack([red, green, blue], axis=2)
+    # blue = convolve2d(image[:, :, 2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 'same')
+    # return np.stack([red, green, blue], axis=2)
     return red, green
+
 
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
@@ -41,11 +45,12 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     #                    [1, 1, 1, -2, 1, 1, 1],
     #                    [1, 1, 1, 1, 1, 1, 1]])
 
-    kernel = np.array([[-1/9, -1/9, -1/9],
-                       [-1/9, 8/9, -1/9],
-                       [-1/9, -1/9, -1/9]])
-    # kernel = np.array([[1, 1, 1, 2, -2, 2, 1, 1, 1],
-    #                    [1, 1, 2, -2, -2, -2, 2, 1, 1],
+    kernel = (1 / 9) * np.array([[-1, -1, -1, -1, -1],
+                                 [-1, -1, 4, -1, -1],
+                                 [-1, 4, 4, 4, -1],
+                                 [-1, -1, 4, -1, -1],
+                                 [-1, -1, -1, -1, -1]])
+    # kernel = np.array([[1, 1, 1, 2, -2, 2, -2, 2, 1, 1],
     #                    [1, 2, -3, -3, -3, -3, -3, 2, 1],
     #                    [2, -2, -3, -3, -3, -3, -3, -2, 2],
     #                    [-2, -2, -3, -3, -8, -3, -3, -2, -2],
@@ -79,7 +84,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     #                    [-1, -1, -1, -1, -1, -1, 0, 0, -1, -1, -1, -1, -1, -1, -1],
     #                    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1],
     #                    [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]])
-# kernel = np.array([[0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
+    # kernel = np.array([[0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
     #                     [0.000, 0.000, 0.034, 0.034, 0.034, 0.000, 0.000],
     #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
     #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
@@ -110,56 +115,60 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
     # c_image = plt.imread(c_image)
     conv_im1, conv_im2 = rgb_convolve2d(c_image, kernel)
-    # plt.imshow(conv_im1)
-    # plt.title("red")
-    # plt.show()
-    # conv_im2 = black_tophat(conv_im1, size=3)
-    red_image = filters.maximum_filter(conv_im1, size=30)
-    green_image = filters.maximum_filter(conv_im2, size=30)
 
+    # conv_im2 = black_tophat(conv_im1, size=3)
+    # red_image = filters.maximum_filter(conv_im1, size=3)
+    # green_image = filters.maximum_filter(conv_im2, size=3)
+    red_image = peak_local_max(conv_im1, min_distance=100)
+    green_image = peak_local_max(conv_im2, min_distance=100)
+    # plt.imshow(kernel, cmap="gray" )
+    # plt.show()
 
     # plt.imshow(kernel, cmap="gray")
     # plt.show()
 
     # image = np.asarray(red_image)
     #
-    # coordinates = np.where(image > 0.18, image)
-    # print(coordinates)
+    red_coordinates = np.argwhere(red_image > 0.3)
+    green_coordinates = np.argwhere(green_image > 0.3)
 
-    #print(green_image)
+    # print(green_image)
 
-    image = red_image.copy()
-    image[image < 0.08] = 0
-    #image = np.where(image > 0.08)
-    print(image)
+    # image = green_image.copy()
+    # image[image < 0.3] = 0
+    # plt.imshow(image)
+    # plt.title("red")
+    # plt.show()
+    # image = np.where(image > 0.08)
+    # print(image)
     # list = np.where(image > 0.08)
-    #image = np.where(image > 0.08)
+    # image = np.where(image > 0.08)
     # for l in list:
     #     print(l)
-    # green_list = []
-    # red_list = []
+    green_list = []
+    red_list = []
     # image[image < 0.1] = 0
-    # for i in image:
-    #     for j in image[i]:
+    # for i in range(len(image)):
+    #     for j in range(len(image[i])):
     #         if image[i][j] != 0:
-    #             if image[i][j] > 2:
-    #                 green_list.append((i,j))
+    #             if image[i][j] > 0.2:
+    #                 green_list.append((i, j))
     #             else:
-    #                 red_list.append((i,j))
-
-
-    #a = [0 if a_ < 0.19 else a_ for a_ in green_image]
-
-    plt.imshow(image)
-    plt.title("red")
-    plt.show()
+    #                 red_list.append((i, j))
+    #
+    # # a = [0 if a_ < 0.19 else a_ for a_ in green_image]
+    # print("green coordinates:")
+    # print(green_list)
+    # print("red coordinates:")
+    #
+    # print(red_list)
+    # plt.imshow(image)
+    # plt.title("red")
+    # plt.show()
 
     # plt.imshow(green_image)
     # plt.title("green")
     # plt.show()
-
-
-
 
     # print(c_image)
     # for i in range(len(c_image)):
@@ -172,7 +181,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # print(red_list)
     # plt.imshow(c_image)
 
-    return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
+    return red_coordinates, green_coordinates
 
 
 ### GIVEN CODE TO TEST YOUR IMPLENTATION AND PLOT THE PICTURES
@@ -213,9 +222,13 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.subplot(111, sharex=h, sharey=h)
     plt.imshow(image)
 
-    red_x, red_y, green_x, green_y = find_tfl_lights(image)
-    plt.plot(red_x, red_y, 'ro', color='r', markersize=4)
-    plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
+    # red_x, red_y, green_x, green_y = find_tfl_lights(image)
+    red_list, green_list = find_tfl_lights(image)
+    for i in red_list:
+        plt.plot(i[1], i[0], 'ro', color='r', markersize=1)
+    for i in green_list:
+        plt.plot(i[1], i[0], 'ro', color='g', markersize=1)
+    # plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
 def main(argv=None):
