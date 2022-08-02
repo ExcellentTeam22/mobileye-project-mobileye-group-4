@@ -18,11 +18,11 @@ except ImportError:
     raise
 
 
-def rgb_convolve2d(image, kernel):
+def rgb_convolve(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
-    #blue = convolve2d(image[:, :, 2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 'same')
-    #return np.stack([red, green, blue], axis=2)
+    # blue = convolve2d(image[:, :, 2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 'same')
+    # return np.stack([red, green, blue], axis=2)
     return red, green
 
 
@@ -35,10 +35,10 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
     # Some kernels for test
 
-    kernel = np.array([[-1/9, -1/9, -1/9],
-                       [-1/9, 8/9, -1/9],
-                       [-1/9, -1/9, -1/9]])
-# kernel = np.array([[0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
+    kernel = (1 / 9) * np.array([[-1, -1, -1],
+                                 [-1, 8, -1],
+                                 [-1, -1, -1]])
+    # kernel = np.array([[0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000],
     #                     [0.000, 0.000, 0.034, 0.034, 0.034, 0.000, 0.000],
     #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
     #                     [0.000, 0.034, 0.034, 0.034, 0.034, 0.034, 0.000],
@@ -68,14 +68,13 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # img.resize(size=(int(img.size[0] * 0.9), int(img.size[1] * 0.9)))
     # gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
     # c_image = plt.imread(c_image)
-    conv_im1, conv_im2 = rgb_convolve2d(c_image, kernel)
+    conv_im1, conv_im2 = rgb_convolve(c_image, kernel)
     # plt.imshow(conv_im1)
     # plt.title("red")
     # plt.show()
     # conv_im2 = black_tophat(conv_im1, size=3)
     red_image = filters.maximum_filter(conv_im1, size=30)
     green_image = filters.maximum_filter(conv_im2, size=30)
-
 
     # plt.imshow(kernel, cmap="gray")
     # plt.show()
@@ -85,14 +84,14 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # coordinates = np.where(image > 0.18, image)
     # print(coordinates)
 
-    #print(green_image)
+    # print(green_image)
 
     image = red_image.copy()
     image[image < 0.08] = 0
-    #image = np.where(image > 0.08)
+    # image = np.where(image > 0.08)
     print(image)
     # list = np.where(image > 0.08)
-    #image = np.where(image > 0.08)
+    # image = np.where(image > 0.08)
     # for l in list:
     #     print(l)
     # green_list = []
@@ -106,8 +105,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     #             else:
     #                 red_list.append((i,j))
 
-
-    #a = [0 if a_ < 0.19 else a_ for a_ in green_image]
+    # a = [0 if a_ < 0.19 else a_ for a_ in green_image]
 
     plt.imshow(image)
     plt.title("red")
@@ -117,53 +115,24 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # plt.title("green")
     # plt.show()
 
-
-
-
-    # print(c_image)
-    # for i in range(len(c_image)):
-    #     for j in range(len(c_image[i])):
+    # green_list = []
+    # red_list = []
+    # for i in range(len(image)):
+    #     for j in range(len(image[i])):
+    #         if image[i][j] != 0:
+    #           if image[i][j] > 2:
+    #             green_list.append((i,j))
+    #           else:
+    #             red_list.append((i,j))
     #         if red_image[i] > c_image.any():
     #             green_list.append((i, j))
     #         if red_image[i] > c_image[i][j][0]:
     #             red_list.append((i, j))
     # print(green_list)
     # print(red_list)
-=======
-    kernel4 = np.array([[1, 0, -1],
-                        [0, 0, 0],
-                        [-1, 0, 1]])
-    kernel1 = np.array([[0, -1, 0],
-                        [-1, 5, -1],
-                        [0, -1, 0]])
-    kernel2 = np.array([[-1, -1, -1],
-                        [-1, 8, -1],
-                        [-1, -1, -1]])
-    kernel5 = np.array([[1, 0, -1],
-                        [2, 0, -2],
-                        [1, 0, -1]])
-    kernel5 = np.array([[-1, 2, -1],
-                        [-2, 4, -2],
-                        [-1, 2, -1]])
-    kernel6 = np.array([[-1, -1, -1, -1, -1],
-                        [-1, 2, 2, 2, -1],
-                        [-1, 2, 10, 2, -1],
-                        [-1, 2, 2, 2, -1],
-                        [-1, -1, -1, -1, -1]])
     # Do not delete its important!
-    conv_im1 = rgb_convolve2d(c_image, kernel6)
-    #fig, ax = plt.subplots(1, 2)
-    #plt.imshow(kernel5, cmap='gray')
-
-    # Convert Image to Red.
-    for i in range(len(c_image)):
-        for j in range(len(c_image[i])):
-            c_image[i][j][0] = 255
-    gray = cv2.cvtColor(c_image, cv2.COLOR_RGB2GRAY)
-    conv_im1 = convolve2d(gray, kernel6)
-
-    conv_im1 = maximum_filter(conv_im1, size=3)
-    plt.imshow(conv_im1, cmap="gray")
+    # fig, ax = plt.subplots(1, 2)
+    # plt.imshow(kernel5, cmap='gray')
 
     # plt.imshow(c_image)
 
