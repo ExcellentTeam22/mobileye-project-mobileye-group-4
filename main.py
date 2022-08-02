@@ -130,14 +130,8 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
 
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
-    cropped_images = []
-    for current in red_list:
-        x = current[1]
-        y = current[0]
-        cropped_images.append(image[y - 30: y + 40, x - 20: x + 20])
-    # cropped_images = [image[red_corner[0] - 8: red_corner[1] + 8, red_corner[1] - 8 : red_corner[1] + 8] for red_corner in red_list]
-    plt.imshow(cropped_images[1])
-    plt.show()
+    cropped_images_red_list = [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20] for current_picture in red_list if current_picture[0] >= 40 and current_picture[1] >= 20]
+    cropped_images_green_list = [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20] for current_picture in green_list if current_picture[0] >= 40 and current_picture[1] >= 20]
     for i in red_list:
         plt.plot(i[1], i[0], 'ro', color='r', markersize=2)
     for i in green_list:
