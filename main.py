@@ -1,7 +1,7 @@
-from skimage.feature import peak_local_max
 try:
     from numpy import dtype
-    # import skimage as sk
+    from tabulate import tabulate
+    from skimage.feature import peak_local_max
     import os
     import json
     import glob
@@ -10,8 +10,7 @@ try:
     import numpy as np
     from scipy import signal as sg
     from scipy.ndimage import convolve
-    import scipy.ndimage.filters as filters
-
+    import scipy.ndimage as filters
     from scipy import misc
     from PIL import Image
 
@@ -24,8 +23,6 @@ except ImportError:
 def rgb_convolve(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
-    # blue = convolve2d(image[:, :, 2], [[0, 0, 0], [0, 0, 0], [0, 0, 0]], 'same')
-    # return np.stack([red, green, blue], axis=2)
     return red, green
 
 
@@ -43,72 +40,39 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                  [-1, -1, 4, -1, -1],
                                  [-1, -1, -1, -1, -1]])
 
-
-
-    # Getting the kernel to be used in Top-Hat
-    # filterSize = (3, 3)
-    # kernel = cv2.getStructuringElement(cv2.MORPH_RECT,
-    #                                  filterSize)
-    # kernel = np.array([[1, 1, 2, 1, 1],
-    #                    [1, -2, -2, -2, 1],
-    #                    [2, -2, -4, -2, 2],
-    #                    [1, -2, -2, -2, 1],
-    #                    [1, 1, 2, 1, 1]])
-    # Do not delete its important!
-    # conv_im1 = rgb_convolve2d(c_image, kernel6)
-    # fig, ax = plt.subplots(1, 2)
-    # plt.imshow(kernel5, cmap='gray')
-
-    # Convert Image to Red.
-    # for i in range(len(c_image)):
-    #     for j in range(len(c_image[i])):
-    #         c_image[i][j][0] = 255
-
-    # img = Image.fromarray(c_image)
-    # img.resize(size=(int(img.size[0] * 0.9), int(img.size[1] * 0.9)))
-    # gray = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
-    # c_image = plt.imread(c_image)
-
-    conv_im1, conv_im2 = rgb_convolve2d(c_image, kernel)
-
-    # conv_im2 = black_tophat(conv_im1, size=3)
-    # red_image = filters.maximum_filter(conv_im1, size=3)
-    # green_image = filters.maximum_filter(conv_im2, size=3)
-    red_image = peak_local_max(conv_im1, min_distance=100)
-    green_image = peak_local_max(conv_im2, min_distance=100)
-    # plt.imshow(kernel, cmap="gray" )
-    # plt.show()
-
     conv_im1, conv_im2 = rgb_convolve(c_image, kernel)
-    # plt.imshow(conv_im1)
-    # plt.title("red")
+
+    # conv_im2 = cv2.erode(conv_im2, kernel, iterations=1)
+    # conv_im2 = cv2.dilate(conv_im2, kernel, iterations=1)
+    # plt.imshow(dilate)
     # plt.show()
-    # conv_im2 = black_tophat(conv_im1, size=3)
-    red_image = filters.maximum_filter(conv_im1, size=30)
-    green_image = filters.maximum_filter(conv_im2, size=30)
+    conv_im1 = filters.maximum_filter(conv_im1, size=1)
+    conv_im2 = filters.maximum_filter(conv_im2, size=1)
 
+    # plt.imshow(conv_im2)
+    # plt.show()
 
-    red_coordinates = np.argwhere(red_image > 0.3)
-    green_coordinates = np.argwhere(green_image > 0.3)
+    red_image = peak_local_max(conv_im1, min_distance=20, threshold_abs=0.2, threshold_rel=0.2)
+    green_image = peak_local_max(conv_im2, min_distance=20, threshold_abs=0.3, threshold_rel=0.3)
 
-    return red_coordinates, green_coordinates
+    return red_image, green_image
 
 
 ### GIVEN CODE TO TEST YOUR IMPLENTATION AND PLOT THE PICTURES
 def show_image_and_gt(image, objs, fig_num=None):
-    plt.figure(fig_num).clf()
-    plt.imshow(image)
+    # plt.figure(fig_num).clf()
+    # plt.imshow(image)
     labels = set()
     if objs is not None:
         for o in objs:
             poly = np.array(o['polygon'])[list(np.arange(len(o['polygon']))) + [0]]
-            plt.plot(poly[:, 0], poly[:, 1], 'r', label=o['label'])
+            plt.plot(poly[:, 0], poly[:, 1], 'r', label=['label'])
             labels.add(o['label'])
         if len(labels) > 1:
             plt.legend()
 
 
-def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
+def test_find_tfl_lights(image_path, data, json_path=None, fig_num=None):
     """
     Run the attention code
     """
@@ -121,7 +85,7 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
         what = ['traffic light']
         objects = [o for o in gt_data['objects'] if o['label'] in what]
 
-    # show_image_and_gt(image, objects, fig_num)
+    show_image_and_gt(image, objects, fig_num)
 
     plt.figure(56)
     plt.clf()
@@ -135,10 +99,23 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
     for i in red_list:
-        plt.plot(i[1], i[0], 'ro', color='r', markersize=1)
+        if image[i[0]][i[1]][0] > image[i[0]][i[1]][1]+0.05 and image[i[0]][i[1]][0] > image[i[0]][i[1]][2]+0.05:
+            plt.plot(i[1], i[0], '+', color='r', markersize=5)
+            data.append(["Red", (i[1], i[0]), image_path])
+        # elif image[i[0]][i[1]][1] > image[i[0]][i[1]][0]+0.03 and image[i[0]][i[1]][1] > image[i[0]][i[1]][2]+0.03:
+        #     plt.plot(i[1], i[0], '+', color='g', markersize=5)
+        #     data.append(["Green", (i[1], i[0]), image_path])
+
+        print(i[1], i[0])
     for i in green_list:
-        plt.plot(i[1], i[0], 'ro', color='g', markersize=1)
-    # plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
+        # if image[i[0]][i[1]][0] > image[i[0]][i[1]][1]+0.1 and image[i[0]][i[1]][0] > image[i[0]][i[1]][2]+0.1:
+        #     plt.plot(i[1], i[0], '+', color='r', markersize=5)
+        #     data.append(["Red", (i[1], i[0]), image_path])
+        if image[i[0]][i[1]][1] > image[i[0]][i[1]][0]+0.03 and image[i[0]][i[1]][1] > image[i[0]][i[1]][2]+0.03:
+            plt.plot(i[1], i[0], '+', color='g', markersize=5)
+            data.append(["Green", (i[1], i[0]), image_path])
+    # plt.savefig(f"procesed_images\{image_path}")
+    plt.show()
 
 
 def main(argv=None):
@@ -146,27 +123,33 @@ def main(argv=None):
     Consider looping over some images from here, so you can manually exmine the results
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
-
+    counter = 0
     parser = argparse.ArgumentParser("Test TFL attention mechanism")
     parser.add_argument('-i', '--image', type=str, help='Path to an image')
     parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
     parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     args = parser.parse_args(argv)
     # To do: change the directory according to your computer!!!
-    default_base = "C:\\Users\\Mohamad-PC\\Desktop\\mobileye\\mobileye-project-mobileye-group-4\\Test_for_me"
+    default_base = r"Test_for_me"
 
     if args.dir is None:
         args.dir = default_base
-    flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
+    flist = glob.glob(os.path.join(args.dir, '**/*_leftImg8bit.png'))
 
-    print(flist)
+    print(len(flist))
+    data = []
 
     for image in flist:
         json_fn = image.replace('_leftImg8bit.png', '_gtFine_polygons.json')
-
         if not os.path.exists(json_fn):
             json_fn = None
-        test_find_tfl_lights(image, json_fn)
+        test_find_tfl_lights(image, data, json_fn)
+
+    col_names = ["Color", "Coordinates", "Image Path"]
+    table = tabulate(data, headers=col_names, showindex="always")
+    print(table)
+    # with open('table.txt', 'w') as f:
+    #     f.write(table)
 
     if len(flist):
         print("You should now see some images, with the ground truth marked on them. Close all to quit.")
