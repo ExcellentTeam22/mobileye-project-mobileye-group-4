@@ -1,5 +1,6 @@
 try:
     from numpy import dtype
+
     from tabulate import tabulate
     from skimage.feature import peak_local_max
     import os
@@ -13,11 +14,23 @@ try:
     import scipy.ndimage as filters
     from scipy import misc
     from PIL import Image
-
     import matplotlib.pyplot as plt
 except ImportError:
     print("Need to fix the installation")
     raise
+
+
+# def check_jsons(green_list, red_list, picture_json):
+#     return all(item in green_list or item in red_list for item in json.load(picture_json))
+#     # for i in picture_json:
+#     #     if i not in find_lists:
+#     #         return False
+#     # return True
+
+
+def get_crops_images(color_list, image):
+    return [image[current_picture[0] - 40: current_picture[0] + 40, current_picture[1] - 20: current_picture[1] + 20]
+            for current_picture in color_list if current_picture[0] >= 40 and current_picture[1] >= 20]
 
 
 def rgb_convolve(image, kernel):
@@ -42,15 +55,8 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
 
     conv_im1, conv_im2 = rgb_convolve(c_image, kernel)
 
-    # conv_im2 = cv2.erode(conv_im2, kernel, iterations=1)
-    # conv_im2 = cv2.dilate(conv_im2, kernel, iterations=1)
-    # plt.imshow(dilate)
-    # plt.show()
     conv_im1 = filters.maximum_filter(conv_im1, size=1)
     conv_im2 = filters.maximum_filter(conv_im2, size=1)
-
-    # plt.imshow(conv_im2)
-    # plt.show()
 
     red_image = peak_local_max(conv_im1, min_distance=20, threshold_abs=0.2, threshold_rel=0.2)
     green_image = peak_local_max(conv_im2, min_distance=20, threshold_abs=0.3, threshold_rel=0.3)
@@ -98,24 +104,22 @@ def test_find_tfl_lights(image_path, data, json_path=None, fig_num=None):
 
     # red_x, red_y, green_x, green_y = find_tfl_lights(image)
     red_list, green_list = find_tfl_lights(image)
+    red_crops = get_crops_images(red_list, image)
+    green_corps = get_crops_images(green_list, image)
     for i in red_list:
         if image[i[0]][i[1]][0] > image[i[0]][i[1]][1]+0.05 and image[i[0]][i[1]][0] > image[i[0]][i[1]][2]+0.05:
             plt.plot(i[1], i[0], '+', color='r', markersize=5)
             data.append(["Red", (i[1], i[0]), image_path])
-        # elif image[i[0]][i[1]][1] > image[i[0]][i[1]][0]+0.03 and image[i[0]][i[1]][1] > image[i[0]][i[1]][2]+0.03:
-        #     plt.plot(i[1], i[0], '+', color='g', markersize=5)
-        #     data.append(["Green", (i[1], i[0]), image_path])
 
         print(i[1], i[0])
     for i in green_list:
-        # if image[i[0]][i[1]][0] > image[i[0]][i[1]][1]+0.1 and image[i[0]][i[1]][0] > image[i[0]][i[1]][2]+0.1:
-        #     plt.plot(i[1], i[0], '+', color='r', markersize=5)
-        #     data.append(["Red", (i[1], i[0]), image_path])
         if image[i[0]][i[1]][1] > image[i[0]][i[1]][0]+0.03 and image[i[0]][i[1]][1] > image[i[0]][i[1]][2]+0.03:
             plt.plot(i[1], i[0], '+', color='g', markersize=5)
             data.append(["Green", (i[1], i[0]), image_path])
     # plt.savefig(f"procesed_images\{image_path}")
     plt.show()
+        
+
 
 
 def main(argv=None):
@@ -130,7 +134,9 @@ def main(argv=None):
     parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     args = parser.parse_args(argv)
     # To do: change the directory according to your computer!!!
-    default_base = r"Test_for_me"
+    
+    default_base = r"tests"
+
 
     if args.dir is None:
         args.dir = default_base
