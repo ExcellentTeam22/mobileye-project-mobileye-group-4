@@ -1,7 +1,6 @@
 try:
     from numpy import dtype
-
-    from tabulate import tabulate
+    import pandas as pd
     from skimage.feature import peak_local_max
     import os
     import json
@@ -107,19 +106,17 @@ def test_find_tfl_lights(image_path, data, json_path=None, fig_num=None):
     red_crops = get_crops_images(red_list, image)
     green_corps = get_crops_images(green_list, image)
     for i in red_list:
-        if image[i[0]][i[1]][0] > image[i[0]][i[1]][1]+0.05 and image[i[0]][i[1]][0] > image[i[0]][i[1]][2]+0.05:
+        if image[i[0]][i[1]][0] > image[i[0]][i[1]][1] + 0.05 and image[i[0]][i[1]][0] > image[i[0]][i[1]][2] + 0.05:
             plt.plot(i[1], i[0], '+', color='r', markersize=5)
             data.append(["Red", (i[1], i[0]), image_path])
 
         print(i[1], i[0])
     for i in green_list:
-        if image[i[0]][i[1]][1] > image[i[0]][i[1]][0]+0.03 and image[i[0]][i[1]][1] > image[i[0]][i[1]][2]+0.03:
+        if image[i[0]][i[1]][1] > image[i[0]][i[1]][0] + 0.03 and image[i[0]][i[1]][1] > image[i[0]][i[1]][2] + 0.03:
             plt.plot(i[1], i[0], '+', color='g', markersize=5)
             data.append(["Green", (i[1], i[0]), image_path])
     # plt.savefig(f"procesed_images\{image_path}")
     plt.show()
-        
-
 
 
 def main(argv=None):
@@ -134,9 +131,8 @@ def main(argv=None):
     parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     args = parser.parse_args(argv)
     # To do: change the directory according to your computer!!!
-    
-    default_base = r"tests"
 
+    default_base = r"Test_for_me"
 
     if args.dir is None:
         args.dir = default_base
@@ -152,8 +148,10 @@ def main(argv=None):
         test_find_tfl_lights(image, data, json_fn)
 
     col_names = ["Color", "Coordinates", "Image Path"]
-    table = tabulate(data, headers=col_names, showindex="always")
+    table = pd.DataFrame(columns=col_names)
+    # table = tabulate(data, headers=col_names, showindex="always")
     print(table)
+    table.to_csv('table.csv', index=True)
     # with open('table.txt', 'w') as f:
     #     f.write(table)
 
