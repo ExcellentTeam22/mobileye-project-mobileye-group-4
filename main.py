@@ -148,10 +148,10 @@ def main(argv=None):
         test_find_tfl_lights(image, data, json_fn)
 
     col_names = ["Color", "Coordinates", "Image Path"]
-    table = pd.DataFrame(columns=col_names)
-    # table = tabulate(data, headers=col_names, showindex="always")
+    table = pd.DataFrame(columns=col_names,data=data)
+
     print(table)
-    table.to_csv('table.csv', index=True)
+    table.to_csv('table.csv')
     # with open('table.txt', 'w') as f:
     #     f.write(table)
 
