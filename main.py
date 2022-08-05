@@ -2,7 +2,6 @@ import h5py as h5py
 
 try:
     from numpy import dtype
-    from tabulate import tabulate
     import pandas as pd
     from skimage.feature import peak_local_max
     import os
@@ -115,6 +114,7 @@ def test_find_tfl_lights(image_path, data, json_path=None, fig_num=None):
     # Our filtering operation
     red_list, green_list = find_tfl_lights(image)
 
+
     # filter the list
     filter_method(red_list, green_list, image, data, image_path)
 
@@ -151,12 +151,10 @@ def main(argv=None):
             json_fn = None
         test_find_tfl_lights(image, data, json_fn)
 
-    col_names = ["Color", "Coordinates", "Image Path"]
-    table = tabulate(data, headers=col_names, showindex="always")
+    col_names = ["path", "x", "y", "zoom", "col"]
+    table = pd.DataFrame(columns=col_names,data=data)
     print(table)
-    # with open('table.txt', 'w') as f:
-    #     f.write(table)
-
+    table.to_csv('table.csv')
     if len(flist):
         print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     else:
@@ -240,6 +238,6 @@ def setting_up_a_crop(directory: str) -> None:
 
 
 if __name__ == '__main__':
-    main()
-    # base_dir = "images/train/"
-    # setting_up_a_crop(base_dir)
+    # main()
+    base_dir = "images/train/"
+    setting_up_a_crop(base_dir)
