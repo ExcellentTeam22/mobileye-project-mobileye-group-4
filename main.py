@@ -238,6 +238,6 @@ def setting_up_a_crop(directory: str) -> None:
 
 
 if __name__ == '__main__':
-    main()
-    # base_dir = "images/train/"
-    # setting_up_a_crop(base_dir)
+    # main()
+    base_dir = "images/train/"
+    setting_up_a_crop(base_dir)
