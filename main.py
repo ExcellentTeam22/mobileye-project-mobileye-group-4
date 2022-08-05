@@ -43,7 +43,7 @@ def rgb_convolve(image, kernel, resize_argument):
     return red, green
 
 
-def find_tfl_lights(c_image, **kwargs):
+def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
     Detect candidates for TFL lights. Use c_image, kwargs and you imagination to implement
     :param c_image: The image itself as np.uint8, shape of (H, W, 3)
