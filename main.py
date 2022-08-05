@@ -33,11 +33,7 @@ def extract_dataset_file(path):
     return np.array(df[df.keys()])
 
 
-def rgb_convolve(image, kernel, resize_argument):
-    # print("the length is:", len(image), len(image[1]))
-    # # image.resize((image), int(len(image[0])*0.9), 3), refcheck=False)
-    # print("the length is:", len(image), len(image[1]))
-    # print("the new length is:", len(image[1]))
+def rgb_convolve(image, kernel):
     red = convolve(image[:, :, 0], kernel)
     green = convolve(image[:, :, 1], kernel)
     return red, green
@@ -58,17 +54,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                   [-1, -1, 4, -1, -1],
                                   [-1, -1, -1, -1, -1]])
 
-    # convolve the red and green dimensions of the image.
-    base_resize = 0.1250
-    # for index in range(1, 4):
-    conv_im1, conv_im2 = rgb_convolve(c_image, kernel, base_resize)
-    # plt.imshow(conv_im1)
-    # plt.show()
-    # red_image = peak_local_max(conv_im1, min_distance=15, threshold_abs=0.2, threshold_rel=0.2)
-    # green_image = peak_local_max(conv_im2, min_distance=15, threshold_abs=0.28, threshold_rel=0.29)
-    # maximum filter operation.
-    # conv_im1 = filters.maximum_filter(conv_im1, size=1)
-    # conv_im2 = filters.maximum_filter(conv_im2, size=1)
+    conv_im1, conv_im2 = rgb_convolve(c_image, kernel)
 
     # Peak the local maximums after normalizing with Maximum filter method.
     red_image = peak_local_max(conv_im1, min_distance=15, threshold_abs=0.2, threshold_rel=0.2)
