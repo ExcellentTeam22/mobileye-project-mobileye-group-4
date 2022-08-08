@@ -112,7 +112,6 @@ def test_find_tfl_lights(image_path, data, json_path=None, fig_num=None):
     # Our filtering operation
     red_list, green_list = find_tfl_lights(image)
 
-
     # filter the list
     filter_method(red_list, green_list, image, data, image_path)
 
@@ -150,7 +149,7 @@ def main(argv=None):
         test_find_tfl_lights(image, data, json_fn)
 
     col_names = ["path", "x", "y", "zoom", "col"]
-    table = pd.DataFrame(columns=col_names,data=data)
+    table = pd.DataFrame(columns=col_names, data=data)
     print(table)
     table.to_csv('table.csv')
     if len(flist):
@@ -219,13 +218,13 @@ def setting_up_a_crop(directory: str) -> None:
     data = []
     counter = 1
     dataset = extract_dataset_file('attention_results.h5')
-    path = directory + dataset[0][0].split("_")[0] + "/" + dataset[0][0]
+    path = f"{directory}{dataset[0][0].split('_')[0]}/{dataset[0][0]}"
     image = Image.open(path)
     for row in dataset:
         if np.isnan(row[1]) and np.isnan(row[2]):
             continue
-        if directory + row[0].split("_")[0] + "/" + row[0] != path:
-            path = directory + row[0].split("_")[0] + "/" + row[0]
+        if f"{directory}{row[0].split('_')[0]}/{row[0]}" != path:
+            path = f"{directory}{row[0].split('_')[0]}/{row[0]}"
             image = Image.open(path)
             counter = 1
         if row[4] == 'r':
@@ -255,10 +254,9 @@ def setting_up_a_crop(directory: str) -> None:
         counter += 1
 
     df = pd.DataFrame(data, columns=headers)
-    df.to_hdf('cropped_table.h5', key='df', mode='w')
+    df.to_hdf('cropped_table.h5', key="Index(['path', 'x', 'y', 'zoom', 'col'], dtype='object')", mode='w')
     print(df)
 
-    #print(tabulate(data, headers=headers, showindex='always'))
 
 if __name__ == '__main__':
     # main()
