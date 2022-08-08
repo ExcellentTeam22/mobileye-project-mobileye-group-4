@@ -1,5 +1,3 @@
-import h5py as h5py
-
 try:
     from numpy import dtype
     import pandas as pd
@@ -162,8 +160,8 @@ def main(argv=None):
     plt.show(block=True)
 
 
-def crop_and_certificate(splitted_name: list, x: int, y: int, zoom_factor: float, x_factor: int, y_left_factor: int,
-                         y_right_factor: int, image: Image) -> (Image, str):
+def crop_and_certificate(splitted_name: list, x: int, y: int, zoom_factor: float, x_factor: int,
+                         y_left_factor: int, y_right_factor: int, image: Image) -> (Image, str):
     """
     This Function is responsible for cropping the image according to the x and y factors and zoom factor,then
     the function checks the labeled image to classificate the cropped image, whether traffic light or not
@@ -183,7 +181,8 @@ def crop_and_certificate(splitted_name: list, x: int, y: int, zoom_factor: float
         1   dusseldorf_000051_000019_leftImg8bit.png   848.0   412.0  0.5000    r
         2   dusseldorf_000051_000019_leftImg8bit.png  1444.0   414.0  0.5000    r"""
 
-    flag = "not Traffic Light"
+    if_traffic_light = False
+    if_ignore = False
 
     # open the selected labeled image
     labeled_image = Image.open("gtFine/train" + "/" + splitted_name[0] + "/" + splitted_name[0] + "_" +
@@ -201,12 +200,13 @@ def crop_and_certificate(splitted_name: list, x: int, y: int, zoom_factor: float
                                                       image_array3[2] == 30 and image_array3[3] == 255) and \
                 (image_array4[0] == 250 and image_array4[1] == 170
                  and image_array4[2] == 30 and image_array4[3] == 255):
-            flag = "Traffic Light"
+            if_traffic_light = True
         else:
-            flag = "Traffic Light but ignore"
+            if_traffic_light = True
+            if_ignore = True
     box = (x - x_factor * zoom_factor, y - y_left_factor * zoom_factor, x + x_factor * zoom_factor,
            y + y_right_factor * zoom_factor)
-    return image.crop(box=box).resize((200, 200)), flag
+    return image.crop(box=box).resize((150, 150)), if_traffic_light, if_ignore
 
 
 def setting_up_a_crop(directory: str) -> None:
@@ -215,29 +215,54 @@ def setting_up_a_crop(directory: str) -> None:
     :param directory: The base directory for thew image.
     :return: None.
     """
+    headers = ["Cropped Image path", "Original Image Path", "Is Traffic Light", "Is Ignore", "Color"]
+    data = []
+    counter = 1
     dataset = extract_dataset_file('attention_results.h5')
+    path = directory + dataset[0][0].split("_")[0] + "/" + dataset[0][0]
+    image = Image.open(path)
     for row in dataset:
+        if np.isnan(row[1]) and np.isnan(row[2]):
+            continue
+        if directory + row[0].split("_")[0] + "/" + row[0] != path:
+            path = directory + row[0].split("_")[0] + "/" + row[0]
+            image = Image.open(path)
+            counter = 1
         if row[4] == 'r':
-            x_factor = 40
-            y_left_factor = 35
-            y_right_factor = 270
-            image = Image.open(directory + row[0].split("_")[0] + "/" + row[0])
-            cropped_image, flag = crop_and_certificate(row[0].split("_"), row[1], row[2], row[3], x_factor,
-                                                       y_left_factor, y_right_factor, image)
+            x_factor = 50
+            y_left_factor = 60
+            y_right_factor = 350
+            cropped_image, if_traffic_light, if_ignore = crop_and_certificate(row[0].split("_"), row[1], row[2], row[3],
+                                                                              x_factor, y_left_factor, y_right_factor,
+                                                                              image)
         else:
-            x_factor = 40
-            y_left_factor = 100
-            y_right_factor = 60
-            image = Image.open(directory + row[0].split("_")[0] + "/" + row[0])
-            cropped_image, flag = crop_and_certificate(row[0].split("_"), row[1], row[2], row[3], x_factor,
-                                                       y_left_factor, y_right_factor, image)
+            x_factor = 20
+            y_left_factor = 80
+            y_right_factor = 20
+            cropped_image, if_traffic_light, if_ignore = crop_and_certificate(row[0].split("_"), row[1], row[2], row[3],
+                                                                              x_factor, y_left_factor, y_right_factor,
+                                                                              image)
+        if if_traffic_light:
+            path = f"cropped_images/Traffic Light/{row[4]}_{if_traffic_light}_{if_ignore}_{counter}_{row[0]}"
+        else:
+            path = f"cropped_images/Not Traffic Light/{row[4]}_{if_traffic_light}_{if_ignore}_{counter}_{row[0]}"
+        cropped_image.save(path, quality=95)
+        data.append([path, path, if_traffic_light, if_ignore, row[4]])
+        # crop = Image.open(f"cropped_images/{row[4]}_{if_traffic_light}_{if_ignore}_{counter}_{row[0]}")
+        # plt.imshow(crop)
+        # plt.title(f"Traffic Light: {if_traffic_light}" + "\n" + f"Ignore: {if_ignore}")
+        # plt.show()
+        counter += 1
 
-        plt.imshow(cropped_image)
-        plt.title(flag)
-        plt.show()
+    df = pd.DataFrame(data, columns=headers)
+    df.to_hdf('cropped_table.h5', key='df', mode='w')
+    print(df)
 
+    #print(tabulate(data, headers=headers, showindex='always'))
 
 if __name__ == '__main__':
     # main()
-    base_dir = "images/train/"
-    setting_up_a_crop(base_dir)
+    # base_dir = "images/train/"
+    # setting_up_a_crop(base_dir)
+    df = extract_dataset_file("cropped_table.h5")
+    print(len(df))
